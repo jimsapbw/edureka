@@ -265,7 +265,8 @@ if user_input := st.chat_input("Type your message..."):
                 "long_term_memory": st.session_state.long_term_memory,
                 "hitl_flag": False
             }
-            final_state = asyncio.run(finance_bot.ainvoke(state))
+            # Use invoke instead of ainvoke to avoid asyncio issues in Streamlit
+            final_state = finance_bot.invoke(state)
             bot_reply = final_state['data']['response']
             st.session_state.user_profile = final_state.get('user_profile', {})
             st.session_state.long_term_memory = final_state.get('long_term_memory', {})
