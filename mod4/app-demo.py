@@ -2,6 +2,7 @@ import streamlit as st
 import asyncio
 from langgraph.graph import StateGraph
 from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage
 from typing import TypedDict, Optional, Dict
 import re
 from dotenv import load_dotenv
@@ -46,7 +47,7 @@ def collect_user_data(state: FinanceState) -> FinanceState:
         f"If no new information is provided, ask a question to gather missing data (e.g., 'How old are you?' or 'What are your financial goals?'). "
         f"Keep tone empathetic and clear."
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     message = response.content.strip()
 
     if "age:" in message.lower() or "income:" in message.lower() or "goal:" in message.lower() or "risk:" in message.lower():
@@ -72,7 +73,7 @@ def detect_intent(state: FinanceState) -> FinanceState:
         f"Long-term context: {long_term_memory.get('last_advice', 'none')}\n"
         f"Intent:"
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     content = response.content.strip().lower()
 
     match = re.search(r"(profile|stock|expense|budget|advice)", content)
@@ -95,7 +96,7 @@ def get_stock_info(state: FinanceState) -> FinanceState:
         f"Extract the stock symbol (e.g., 'AAPL' for Apple) from the request: {user_input}. "
         f"Return only the symbol (e.g., 'AAPL') or 'UNKNOWN' if unclear. Do not include extra text."
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     stock_symbol = response.content.strip().upper()
 
     # Validate stock symbol with regex
@@ -123,7 +124,7 @@ def get_stock_info(state: FinanceState) -> FinanceState:
                     f"Provide a brief note on investing in {stock_symbol} tailored to a user with {risk_tolerance} risk tolerance. "
                     f"Keep it clear and empathetic."
                 )
-                risk_response = llm.invoke(risk_prompt)
+                risk_response = llm.invoke([HumanMessage(content=risk_prompt)])
                 message += f"\n{risk_response.content.strip()}"
             elif "Error Message" in data:
                 message = f"Error from Alpha Vantage: {data['Error Message']}. Please check the stock symbol or try again later."
@@ -152,7 +153,7 @@ def track_expenses(state: FinanceState) -> FinanceState:
         f"Consider user profile: {user_profile}. "
         f"Reply with a confirmation message, e.g., 'Added expense of $50 for groceries.'"
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     message = response.content.strip()
 
     short_term_memory['last_expense'] = user_input
@@ -165,7 +166,7 @@ def budget_summary(state: FinanceState) -> FinanceState:
         f"Mock a simple budget summary with categories and totals, tailored to user profile: {user_profile}. "
         f"Use clear, empathetic language."
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     message = response.content.strip()
     return {**state, "data": {"response": message}}
 
@@ -181,7 +182,7 @@ def provide_advice(state: FinanceState) -> FinanceState:
         f"Previous advice: {long_term_memory.get('last_advice', 'none')}. "
         f"Use clear, empathetic language suitable for users with limited financial literacy."
     )
-    response = llm.invoke(prompt)
+    response = llm.invoke([HumanMessage(content=prompt)])
     message = response.content.strip()
 
     long_term_memory['last_advice'] = message
