@@ -35,7 +35,7 @@ class FinanceState(TypedDict):
 llm = ChatGroq(groq_api_key=GROQ_API_KEY, model_name="llama3-70b-8192")
 
 # === USER PROFILE COLLECTION ===
-async def collect_user_data(state: FinanceState) -> FinanceState:
+def collect_user_data(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     user_profile = state.get('user_profile', {})
     short_term_memory = state.get('short_term_memory', {})
@@ -46,7 +46,7 @@ async def collect_user_data(state: FinanceState) -> FinanceState:
         f"If no new information is provided, ask a question to gather missing data (e.g., 'How old are you?' or 'What are your financial goals?'). "
         f"Keep tone empathetic and clear."
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     message = response.content.strip()
 
     if "age:" in message.lower() or "income:" in message.lower() or "goal:" in message.lower() or "risk:" in message.lower():
@@ -60,7 +60,7 @@ async def collect_user_data(state: FinanceState) -> FinanceState:
     return {**state, "user_profile": user_profile, "data": {"response": message}, "short_term_memory": short_term_memory}
 
 # === INTENT DETECTION ===
-async def detect_intent(state: FinanceState) -> FinanceState:
+def detect_intent(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     short_term_memory = state.get('short_term_memory', {})
     long_term_memory = state.get('long_term_memory', {})
@@ -72,7 +72,7 @@ async def detect_intent(state: FinanceState) -> FinanceState:
         f"Long-term context: {long_term_memory.get('last_advice', 'none')}\n"
         f"Intent:"
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     content = response.content.strip().lower()
 
     match = re.search(r"(profile|stock|expense|budget|advice)", content)
@@ -85,7 +85,7 @@ async def detect_intent(state: FinanceState) -> FinanceState:
     return {**state, "intent": intent, "short_term_memory": short_term_memory, "hitl_flag": hitl_flag}
 
 # === STOCK INFO ===
-async def get_stock_info(state: FinanceState) -> FinanceState:
+def get_stock_info(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     short_term_memory = state.get('short_term_memory', {})
     user_profile = state.get('user_profile', {})
@@ -95,7 +95,7 @@ async def get_stock_info(state: FinanceState) -> FinanceState:
         f"Extract the stock symbol (e.g., 'AAPL' for Apple) from the request: {user_input}. "
         f"Return only the symbol (e.g., 'AAPL') or 'UNKNOWN' if unclear. Do not include extra text."
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     stock_symbol = response.content.strip().upper()
 
     # Validate stock symbol with regex
@@ -123,7 +123,7 @@ async def get_stock_info(state: FinanceState) -> FinanceState:
                     f"Provide a brief note on investing in {stock_symbol} tailored to a user with {risk_tolerance} risk tolerance. "
                     f"Keep it clear and empathetic."
                 )
-                risk_response = await llm.ainvoke(risk_prompt)
+                risk_response = llm.invoke(risk_prompt)
                 message += f"\n{risk_response.content.strip()}"
             elif "Error Message" in data:
                 message = f"Error from Alpha Vantage: {data['Error Message']}. Please check the stock symbol or try again later."
@@ -142,7 +142,7 @@ async def get_stock_info(state: FinanceState) -> FinanceState:
     return {**state, "data": {"response": message}, "short_term_memory": short_term_memory}
 
 # === MOCK EXPENSE TRACKING ===
-async def track_expenses(state: FinanceState) -> FinanceState:
+def track_expenses(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     short_term_memory = state.get('short_term_memory', {})
     user_profile = state.get('user_profile', {})
@@ -152,25 +152,25 @@ async def track_expenses(state: FinanceState) -> FinanceState:
         f"Consider user profile: {user_profile}. "
         f"Reply with a confirmation message, e.g., 'Added expense of $50 for groceries.'"
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     message = response.content.strip()
 
     short_term_memory['last_expense'] = user_input
     return {**state, "data": {"response": message}, "short_term_memory": short_term_memory}
 
 # === MOCK BUDGET SUMMARY ===
-async def budget_summary(state: FinanceState) -> FinanceState:
+def budget_summary(state: FinanceState) -> FinanceState:
     user_profile = state.get('user_profile', {})
     prompt = (
         f"Mock a simple budget summary with categories and totals, tailored to user profile: {user_profile}. "
         f"Use clear, empathetic language."
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     message = response.content.strip()
     return {**state, "data": {"response": message}}
 
 # === PERSONALIZED ADVICE ===
-async def provide_advice(state: FinanceState) -> FinanceState:
+def provide_advice(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     user_profile = state.get('user_profile', {})
     long_term_memory = state.get('long_term_memory', {})
@@ -181,14 +181,14 @@ async def provide_advice(state: FinanceState) -> FinanceState:
         f"Previous advice: {long_term_memory.get('last_advice', 'none')}. "
         f"Use clear, empathetic language suitable for users with limited financial literacy."
     )
-    response = await llm.ainvoke(prompt)
+    response = llm.invoke(prompt)
     message = response.content.strip()
 
     long_term_memory['last_advice'] = message
     return {**state, "data": {"response": message}, "long_term_memory": long_term_memory}
 
 # === HUMAN-IN-THE-LOOP ===
-async def human_in_the_loop(state: FinanceState) -> FinanceState:
+def human_in_the_loop(state: FinanceState) -> FinanceState:
     user_input = state['user_input']
     prompt = (
         f"The query '{user_input}' has been flagged as high-risk. "
@@ -199,7 +199,7 @@ async def human_in_the_loop(state: FinanceState) -> FinanceState:
     return {**state, "data": {"response": message}}
 
 # === FALLBACK ===
-async def fallback(state: FinanceState) -> FinanceState:
+def fallback(state: FinanceState) -> FinanceState:
     message = "🤔 Sorry, I didn't understand. Try asking about stocks, expenses, budgets, or financial advice."
     return {**state, "data": {"response": message}}
 
