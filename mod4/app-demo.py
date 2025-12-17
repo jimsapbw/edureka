@@ -12,8 +12,13 @@ import logging
 
 # === CONFIG ===
 load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+# Try Streamlit secrets first, then fall back to environment variables
+try:
+    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+    ALPHA_VANTAGE_API_KEY = st.secrets.get("ALPHA_VANTAGE_API_KEY", os.getenv("ALPHA_VANTAGE_API_KEY"))
+except:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +38,11 @@ class FinanceState(TypedDict):
     hitl_flag: Optional[bool]  # Flag for high-risk queries
 
 # === LLM ===
-llm = ChatGroq(groq_api_key=GROQ_API_KEY, model_name="llama3-70b-8192")
+llm = ChatGroq(
+    groq_api_key=GROQ_API_KEY, 
+    model_name="llama-3.3-70b-versatile",
+    temperature=0.7
+)
 
 # === USER PROFILE COLLECTION ===
 def collect_user_data(state: FinanceState) -> FinanceState:
