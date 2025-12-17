@@ -1,0 +1,31 @@
+Here are the types of questions to test each intent:
+
+FAQ Questions (handled by LLM with knowledge base):
+
+"How do I reset my password?"
+"How can I set up my account?"
+"Where can I view my billing history?"
+"How do I upgrade to premium features?"
+"How do I contact support?"
+"What payment methods do you accept?"
+History Questions (uses personalized memory):
+
+"What did I ask you before?"
+"Can you remind me what we discussed last time?"
+"Show me my previous queries"
+"What issues have I reported?"
+Complex/High-Risk Questions (escalated to human support):
+These contain keywords: error, not working, complaint, refund, charge dispute, escalate, manager, lawsuit
+
+"This feature is not working properly"
+"I want to file a complaint"
+"I need a refund for my subscription"
+"There's an error when I try to login"
+"I want to escalate this to a manager"
+"There's a charge dispute on my account"
+Fallback Questions (unclear intent):
+
+"Tell me a joke"
+"What's the weather like?"
+"Can you help me with my homework?"
+Random or unclear requests
